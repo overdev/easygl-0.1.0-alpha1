@@ -17,7 +17,7 @@ Features
 
 Examples
 ---
-###Defining and creating a textured quad
+### Defining and creating a textured quad ###
 
 ```python
 from easygl.arrays import VertexArrayData, DType, attribute, vertex, vertex_copy
@@ -40,7 +40,7 @@ with textured_quad.new_primitive('texquad', 6):
     vertex_copy(2)   # copies the Top Left vertex
 ```
 
-###Initializing the display
+### Initializing the display ###
 The piece of code below shows how the PyGame window is initialized with an OpenGL context.
 There's nothing special about `GLWindow` object (except that only one instance should exist at a time),
 its job is to only simplify the setup and most common input, display and rendering operations.
@@ -59,7 +59,7 @@ window = GLWindow(
 )
 ```
 
-###Texture loading
+### Texture loading ###
 
 ```python
 from easygl.textures import TextureData, MipMap, Wrap, Filter
@@ -82,7 +82,7 @@ tex_size = texdescriptor.size
 tex_id = texdescriptor.id
 ```
 
-###Shaders
+### Shaders ###
 ```python
 from easygl.shaders import ShaderProgramData, ShaderProgram, ShaderCompileError
 
@@ -131,14 +131,14 @@ sprite_shader = shaderlib.build('sprite',
                                 'model', 'view', 'projection', 'tex', 'blendColor')
 ```
 
-###VertexArrays
+### VertexArrays ###
 ```python
 from easygl.arrays import VertexArray
 
 texquad = VertexArray(textured_quad, 'texquad', sprite_shader)  # using values from examples above
 ```
 
-###Vectors and Matrices
+### Vectors and Matrices ###
 ```python
 from easygl.structures import FrozenMat4, Vec4
 from easygl.display import ndc
@@ -149,7 +149,7 @@ projection = FrozenMat4.ortho(0, window.width, 0, window.height, -1, 1)
 
 ```
 
-###Game loop, input and rendering
+### Game loop, input and rendering ###
 Following the examples above, we can now implement the game loop to process input and render the frame:
 ```python
 import pygame as pg

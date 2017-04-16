@@ -215,42 +215,42 @@ def init():
 
     circle_shader = circle_shader_data.build(
         'circle_shader',
-        circle_prec=DType.float,
-        model=DType.float_m4,
-        view=DType.float_m4,
-        projection=DType.float_m4,
-        vcoord=DType.float,
-        tex=DType.int,
-        color=DType.float_v4,
-        solidcolor=DType.bool
+        "circle_prec",
+        "model",
+        "view",
+        "projection",
+        "vcoord",
+        "tex",
+        "color",
+        "solidcolor",
     )
 
     arc_shader = circle_shader_data.build(
         'arc_shader',
-        angle=DType.float,
-        theta=DType.float,
-        arc_prec=DType.float,
-        model=DType.float_m4,
-        view=DType.float_m4,
-        projection=DType.float_m4,
-        vcoord=DType.float,
-        tex=DType.int,
-        color=DType.float_v4,
-        solidcolor=DType.bool
+        "angle",
+        "theta",
+        "arc_prec",
+        "model",
+        "view",
+        "projection",
+        "vcoord",
+        "tex",
+        "color",
+        "solidcolor"
     )
 
     pie_shader = circle_shader_data.build(
         'pie_shader',
-        angle=DType.float,
-        theta=DType.float,
-        arc_prec=DType.float,
-        model=DType.float_m4,
-        view=DType.float_m4,
-        projection=DType.float_m4,
-        vcoord=DType.float,
-        tex=DType.int,
-        color=DType.float_v4,
-        solidcolor=DType.bool
+        "angle",
+        "theta",
+        "arc_prec",
+        "model",
+        "view",
+        "projection",
+        "vcoord",
+        "tex",
+        "color",
+        "solidcolor",
     )
 
     # endregion
