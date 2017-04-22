@@ -267,7 +267,7 @@ def init_circle_line():
         with vertex_array_data.definition():
             attribute('idx', DType.float)
 
-        with vertex_array_data.new_primitive('circle_arc_pie_line', 6):
+        with vertex_array_data.new_primitive('circle_arc_pie_line', MAX_PRECISION + 1):
             for i in range(MAX_PRECISION + 1):
                 vertex(index=float(i))
 
@@ -333,3 +333,82 @@ def init_circle_line():
         VERTEXARRAYDATA[CIRCLE_LINE], 'circle_arc_pie_line', SHADERPROGRAM[CIRCLE_LINE])
 
     INITIALIZED_DATA |= CIRCLE_LINE
+
+
+def init_circle_fill():
+    global INITIALIZED_DATA
+    if CIRCLE_FILL & INITIALIZED_DATA != 0:
+        return
+
+    if INITIALIZED_DATA & CIRCLE == 0:
+        vertex_array_data = VertexArrayData()
+        VERTEXARRAYDATA[CIRCLE_FILL] = vertex_array_data
+        with vertex_array_data.definition():
+            attribute('idx', DType.float)
+
+        with vertex_array_data.new_primitive('circle_arc_pie_fill', MAX_PRECISION + 1):
+            for i in range(MAX_PRECISION + 1):
+                vertex(index=float(i))
+
+    vsh_circle_fill = """
+    #version 330 core
+
+    in float idx;
+
+    uniform float circle_prec;
+    uniform mat4 model;
+    uniform mat4 view;
+    uniform mat4 projection;
+    uniform float vcoord;
+
+    out vec2 coord;
+
+    vec4 vertex(float num, float den) {
+
+        float ang = radians((num / den) * 360.0f);
+
+        return vec4(cos(ang), sin(ang), 0.0f, 1.0f);
+
+    }
+
+    void main() {
+
+        gl_Position = projection * view * model * vertex(gl_VertexID, circle_prec + idx);
+        coord = vec2(gl_VertexID / circle_prec, vcoord);
+
+    }
+    """
+    fsh_circle_fill = """
+    #version 330 core
+
+    in vec2 coord;
+
+    uniform sampler2D tex;
+    uniform vec4 color;
+    uniform bool solidcolor;
+
+    void main() {
+
+        if (solidcolor)
+            gl_FragColor = color;
+        else
+            gl_FragColor = color * texture(tex, coord);
+    }
+    """
+
+    SHADERPROGRAMDATA.compile_vertex_shader('circle_fill', shader_code=vsh_circle_line)
+
+    if INITIALIZED_DATA & (PIE_ELLIPSE_LINE | ARC_CIRCLE) != 0:
+        SHADERPROGRAMDATA.compile_fragment_shader('circle_arc_pie_fill', shader_code=fsh_circle_line)
+
+    SHADERPROGRAMDATA.link('circle_fill', vertex='circle_fill', fragment='circle_arc_pie_fill')
+
+    SHADERPROGRAM[CIRCLE_FILL] = SHADERPROGRAMDATA.build(
+        'circle_fill',
+        "circle_prec", "model", "view", "projection", "vcoord", "color", "tex", "solidcolor"
+    )
+
+    VERTEXARRAY[CIRCLE_FILL] = VertexArray(
+        VERTEXARRAYDATA[CIRCLE_FILL], 'circle_arc_pie_fill', SHADERPROGRAM[CIRCLE_FILL])
+
+    INITIALIZED_DATA |= CIRCLE_FILL

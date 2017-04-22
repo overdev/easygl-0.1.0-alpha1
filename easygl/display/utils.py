@@ -30,6 +30,7 @@
 from easygl.structures.vectors import Vec3, Vec4
 import pygame as pg
 import random
+from collections import namedtuple as nt
 
 __all__ = [
     'ndc',
@@ -37,6 +38,7 @@ __all__ = [
     'rgba',
     'any_rgb',
     'any_rgba',
+    'Color',
 ]
 
 
@@ -50,13 +52,14 @@ def rgb(red, green, blue):
 
 
 def rgba(red, green, blue, alpha):
-    # type: (int, int, int) -> Vec4
+    # type: (int, int, int, int) -> Vec4
     return Vec4(
         max(0., min(red / 255., 1.)),
         max(0., min(green / 255., 1.)),
         max(0., min(blue / 255., 1.)),
         max(0., min(alpha / 255., 1.))
     )
+
 
 def any_rgba():
     # type: () -> Vec4
@@ -66,6 +69,8 @@ def any_rgba():
         random.random(),
         random.random()
     )
+
+
 def any_rgb():
     # type: () -> Vec4
     return Vec3(
@@ -74,9 +79,23 @@ def any_rgb():
         random.random()
     )
 
+
 def ndc(x, y):
     # type: (float, float) -> tuple
     w, h = pg.display.get_surface().get_size()
     ox = w * 0.5
     oy = h * 0.5
     return ox + (ox * x), oy + (oy * y)
+
+
+Color = nt("Color", "none black red yellow green cyan blue magenta white")(
+    Vec4(0, 0, 0, 0),
+    Vec4(0, 0, 0, 1),
+    Vec4(1, 0, 0, 1),
+    Vec4(1, 1, 0, 1),
+    Vec4(0, 1, 0, 1),
+    Vec4(0, 1, 1, 1),
+    Vec4(0, 0, 1, 1),
+    Vec4(1, 0, 1, 1),
+    Vec4(1, 1, 1, 1),
+)

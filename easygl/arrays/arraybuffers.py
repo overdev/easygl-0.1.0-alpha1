@@ -103,11 +103,12 @@ class VertexArray(object):
         GL.glBindVertexArray(self.vao)
 
     @contextmanager
-    def render(self, mode, count=None):
-        # type: (int) -> None
-        self._program.use()
+    def render(self, mode, count=None, with_shader=None):
+        # type: (int, Optional[int], Optional[ShaderProgram]) -> None
+        shader = with_shader if isinstance(with_shader, ShaderProgram) else self._program
+        shader.use()
 
         yield self._program
 
         self.draw_arrays(mode, count)
-        self._program.unbind()
+        shader.unbind()
