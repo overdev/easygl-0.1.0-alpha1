@@ -119,6 +119,10 @@ class GLWindow(object):
         self._delta = 1
 
     @property
+    def projection(self):
+        return self._projection
+
+    @property
     def title(self):
         return pg.display.get_caption()
 

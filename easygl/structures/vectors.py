@@ -373,6 +373,29 @@ class Vec2(Arithvector):
 
     # endregion
 
+    @staticmethod
+    def pack_values(*values, as_double=False):
+        if as_double:
+            fmt = DType.double_v2.format
+        else:
+            fmt = DType.float_v2.format
+        return struct.pack(fmt, *values)
+
+    def pack(self, as_double=False):
+        if as_double:
+            fmt = DType.double_v2.format
+        else:
+            fmt = DType.float_v2.format
+        return struct.pack(fmt, self.x, self.y)
+
+    def unpack(self, buffer, as_double=False):
+        if as_double:
+            fmt = DType.double_v2.format
+        else:
+            fmt = DType.float_v2.format
+        self.x, self.y = struct.unpack(fmt, buffer)
+        return self
+
     def pack_into(self, buffer, offset, as_double=False):
         if as_double:
             fmt = DType.double_v2.format
@@ -386,6 +409,7 @@ class Vec2(Arithvector):
         else:
             fmt = DType.float_v2.format
         self.x, self.y = struct.unpack_from(fmt, buffer, offset)
+        return self
 
 
 class Vec3(Arithvector):
@@ -466,6 +490,29 @@ class Vec3(Arithvector):
             raise AttributeError("Vec3 object has no '{}' attribute.".format(name))
 
     # endregion
+
+    @staticmethod
+    def pack_values(*values, as_double=False):
+        if as_double:
+            fmt = DType.double_v3.format
+        else:
+            fmt = DType.float_v3.format
+        return struct.pack(fmt, *values)
+
+    def pack(self, as_double=False):
+        if as_double:
+            fmt = DType.double_v3.format
+        else:
+            fmt = DType.float_v3.format
+        return struct.pack(fmt, self.x, self.y, self.z)
+
+    def unpack(self, buffer, as_double=False):
+        if as_double:
+            fmt = DType.double_v3.format
+        else:
+            fmt = DType.float_v3.format
+        self.x, self.y, self.z = struct.unpack(fmt, buffer)
+        return self
 
     def pack_into(self, buffer, offset, as_double=False):
         if as_double:
@@ -564,6 +611,29 @@ class Vec4(Arithvector):
             raise AttributeError("Vec4 object has no '{}' attribute.".format(name))
 
     # endregion
+
+    @staticmethod
+    def pack_values(*values, as_double=False):
+        if as_double:
+            fmt = DType.double_v4.format
+        else:
+            fmt = DType.float_v4.format
+        return struct.pack(fmt, *values)
+
+    def pack(self, as_double=False):
+        if as_double:
+            fmt = DType.double_v4.format
+        else:
+            fmt = DType.float_v4.format
+        return struct.pack(fmt, self.x, self.y, self.z, self.w)
+
+    def unpack(self, buffer, as_double=False):
+        if as_double:
+            fmt = DType.double_v4.format
+        else:
+            fmt = DType.float_v4.format
+        self.x, self.y, self.z, self.w = struct.unpack(fmt, buffer)
+        return self
 
     def pack_into(self, buffer, offset, as_double=False):
         if as_double:
