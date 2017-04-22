@@ -172,7 +172,7 @@ while not window.should_close:
 
         # here's how texquad is rendered:
         with texquad.render(GL.GL_LINES) as shader:   # type: ShaderProgram
-            tex = texdata['karen']   # type: TexDescriptor
+            tex = texdata['the_texture']   # type: TexDescriptor
             # load_sampler2d() enables to pass more than one texture when needed. The last argument
             # activates the texture unit.
             shader.load_sampler2d('tex', tex.id, 0)
