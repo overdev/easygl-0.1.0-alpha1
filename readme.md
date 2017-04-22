@@ -171,7 +171,7 @@ while not window.should_close:
     with window.rendering():
 
         # here's how texquad is rendered:
-        with texquad.render(GL.GL_LINES) as shader:   # type: ShaderProgram
+        with texquad.render(GL.GL_TRIANGLES) as shader:   # type: ShaderProgram
             tex = texdata['the_texture']   # type: TexDescriptor
             # load_sampler2d() enables to pass more than one texture when needed. The last argument
             # activates the texture unit.
