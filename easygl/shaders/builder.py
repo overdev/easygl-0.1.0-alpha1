@@ -66,6 +66,12 @@ class ShaderProgramData(object):
                     uniforms.add(uniform)
         return uniforms
 
+    def compile_fragment_shaders(self, **kwargs):
+        # type: (...) -> None
+        for frag_shader_name in kwargs:
+            shader_file = kwargs[frag_shader_name]
+            self.compile_fragment_shader(frag_shader_name, shader_file=shader_file)
+
     def compile_fragment_shader(self, frag_shader_name, **kwargs):
         # type: (str, ...) -> None
         if 'shader_file' in kwargs:
@@ -94,6 +100,12 @@ class ShaderProgramData(object):
 
         self._fragshaders[frag_shader_name] = fragment_id
 
+    def compile_vertex_shaders(self, **kwargs):
+        # type: (...) -> None
+        for vert_shader_name in kwargs:
+            shader_file = kwargs[vert_shader_name]
+            self.compile_vertex_shader(vert_shader_name, shader_file=shader_file)
+
     def compile_vertex_shader(self, vert_shader_name, **kwargs):
         # type: (str, ...) -> None
         if 'shader_file' in kwargs:
@@ -120,6 +132,12 @@ class ShaderProgramData(object):
             raise ShaderCompileError(GL.glGetShaderInfoLog(vertex_id))
 
         self._vertshaders[vert_shader_name] = vertex_id
+
+    def compile_geometry_shaders(self, **kwargs):
+        # type: (...) -> None
+        for geom_shader_name in kwargs:
+            shader_file = kwargs[geom_shader_name]
+            self.compile_geometry_shader(geom_shader_name, shader_file=shader_file)
 
     def compile_geometry_shader(self, geom_shader_name, **kwargs):
         # type: (str, ...) -> None

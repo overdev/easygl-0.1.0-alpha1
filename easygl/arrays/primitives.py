@@ -81,6 +81,7 @@ def vertex(**attrs):
                     struct.pack_into(dtype.format, data, position + offset, value)
                 offset += dtype.byte_size
             arraystate += 1
+            arraystate.vertex_count += 1
     return False
 
 
@@ -100,6 +101,7 @@ def vertex_copy(index):
             chunk = data[chunk_position: chunk_position + descriptor.stride]
             data[position: position + descriptor.stride] = chunk
             arraystate += 1
+            arraystate.vertex_count += 1
     return False
 
 
@@ -109,7 +111,7 @@ class VertexArrayData(object):
     _arraystate = []
 
     class ArrayState(object):
-        __slots__ = 'primitive_name', 'vertex_index', 'descriptor', 'lastvalues'
+        __slots__ = 'primitive_name', 'vertex_index', 'descriptor', 'lastvalues', 'vertex_count'
 
         def __init__(self, primitive_name, vertex_index, descriptor, defaults):
             # type: (str, int, VertexArrayData, dict) -> None
@@ -117,6 +119,7 @@ class VertexArrayData(object):
             self.vertex_index = vertex_index
             self.descriptor = descriptor
             self.lastvalues = defaults
+            self.vertex_count = 0
 
         def __eq__(self, other):
             if isinstance(other, VertexArrayData.ArrayState):

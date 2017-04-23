@@ -43,7 +43,7 @@ with textured_quad.new_primitive('texquad', 6):
 ### Initializing the display ###
 The piece of code below shows how the PyGame window is initialized with an OpenGL context.
 There's nothing special about `GLWindow` object (except that only one instance should exist at a time),
-its job is to only simplify the setup and most common input, display and rendering operations.
+its job is to only simplify the setup and the most common input, display and rendering operations.
 
 It must be initialize before OpenGL operations takes place.
 ```python
@@ -120,15 +120,17 @@ void main() {
 
 }
 """
-
+# compile_*_shader() methods performs a simple scan for uniforms in the shader code, saves them and
+# get their location, wich saves some precious typing and a few gl calls later on.
 shaderlib = ShaderProgramData("")
 shaderlib.compile_fragment_shader('sprite', shader_code=fsh_code)
 shaderlib.compile_vertex_shader('sprite', shader_code=vsh_code)
 
-shaderlib.link('sprite', vertex='sprite', fragment='sprite')
+shaderlib.link('sprite_shader', vertex='sprite', fragment='sprite')
 
-sprite_shader = shaderlib.build('sprite',
-                                'model', 'view', 'projection', 'tex', 'blendColor')
+# build() method saves the address of all uniforms used in the shaders, so you won't need
+# to worry about glGetUniformLocation() whenever you pass an uniform value.
+sprite_shader = shaderlib.build('sprite_shader')
 ```
 
 ### VertexArrays ###
@@ -173,10 +175,11 @@ while not window.should_close:
         # here's how texquad is rendered:
         with texquad.render(GL.GL_TRIANGLES) as shader:   # type: ShaderProgram
             tex = texdata['the_texture']   # type: TexDescriptor
-            # load_sampler2d() enables to pass more than one texture when needed. The last argument
-            # activates the texture unit.
-            shader.load_sampler2d('tex', tex.id, 0)
+            # note that no glGetUniformLocation() call is made at all.
             shader.load_matrix4f('model', 1, False, model)
+            # you can pass more than one texture by making another call to load_sampler2d
+            # and incrementing the texture unit (last argument) by one.
+            shader.load_sampler2d('tex', tex.id, 0)
             shader.load_matrix4f('view', 1, False, view)
             shader.load_matrix4f('projection', 1, False, projection)
             shader.load4f('blendColor', 1., 1., 1., 1.)
