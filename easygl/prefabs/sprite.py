@@ -172,15 +172,9 @@ def init():
     SpriteShaderData.link('sprite_shader', fragment='sprite', vertex='sprite')
     SpriteShaderData.link('anim_sprite_shader', fragment='sprite', vertex='anim_sprite')
 
-    sprite_program = SpriteShaderData.build(
-        'sprite_shader',
-        "model", "view", "projection", "color", "tex"
-    )
-
-    anim_sprite_program = SpriteShaderData.build(
-        'anim_sprite_shader',
-        "model", "view", "projection", "lefttoprightbottom", "color", "tex"
-    )
+    sprite_program = SpriteShaderData.build('sprite_shader')
+    anim_sprite_program = SpriteShaderData.build('anim_sprite_shader')
+    
     # endregion
 
     # region - - -- ----==<[ SPRITE VERTEXARRAYS ]>==---- -- - -

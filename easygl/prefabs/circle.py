@@ -41,10 +41,15 @@ from easygl.display import BlendMode, GLWindow
 __all__ = [
     'MAX_PRECISION',
     'circle_line',
+    'ellipse_line'
     'circle_fill',
+    'ellipse_fill',
     'arc_line',
+    'arc_ellipse_line',
     'pie_line',
+    'pie_ellipse_line',
     'pie_fill',
+    'pie_ellipse_fill',
     'init',
 ]
 
@@ -59,9 +64,27 @@ def circle_line(window, view, projection, position, rotation, radius, color, pre
     pass
 
 
+def oval_line(window, view, projection, position, rotation, size, radii, color, precision, tex=None, vcoord=0.,
+                blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, Vec2, Vec4, int, Optional[TexDescriptor], float) -> None
+    pass
+
+
+def ellipse_line(window, view, projection, position, rotation, radii, color, precision, tex=None, vcoord=0.,
+                blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, Vec4, int, Optional[TexDescriptor], float) -> None
+    pass
+
+
 def circle_fill(window, view, projection, position, rotation, radius, color, precision, tex=None, vcoord=0.,
                 blend=BlendMode.alpha):
     # type: (GLWindow, Mat4, Mat4, Vec2, float, float, Vec4, int, Optional[TexDescriptor], float) -> None
+    pass
+
+
+def ellipse_fill(window, view, projection, position, rotation, radii, color, precision, tex=None, vcoord=0.,
+                blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, Vec4, int, Optional[TexDescriptor], float) -> None
     pass
 
 
@@ -71,9 +94,20 @@ def arc_line(window, view, projection, position, rotation, radius, start, end, c
     pass
 
 
+def arc_ellipse_line(window, view, projection, position, rotation, radii, start, end, color, precision, tex=None, vcoord=0.,
+             blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, float, float, Vec4, float, Optional[TexDescriptor], float, BlendMode) -> None
+    pass
+
+
 def pie_line(window, view, projection, position, rotation, radius, start, end, color, precision, tex=None, vcoord=0.,
              blend=BlendMode.alpha):
     # type: (GLWindow, Mat4, Mat4, Vec2, float, float, float, float, Vec4, float, Optional[TexDescriptor], float, BlendMode) -> None
+    pass
+
+
+def pie_ellipse_line(window, view, projection, position, rotation, radii, start, end, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, float, float, Vec4, int, Optional[TexDescriptor], float, BlendMode) -> None
     pass
 
 
@@ -83,9 +117,16 @@ def pie_fill(window, view, projection, position, rotation, radius, start, end, c
     pass
 
 
+def pie_ellipse_fill(window, view, projection, position, rotation, radii, start, end, color, precision, tex=None, vcoord=0.,
+             blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, float, float, Vec4, float, Optional[TexDescriptor], float, BlendMode) -> None
+    pass
+
+
 def init():
-    global _initialized, circle_line, circle_fill, arc_line, pie_line, pie_fill, circle_shader_data, circle_vertex_array,\
-           circle_shader, texdata
+    global _initialized, circle_line, ellipse_line, oval_line, ellipse_fill, circle_fill, arc_line, arc_ellipse_line,\
+        pie_line, pie_ellipse_line, pie_fill, pie_ellipse_fill,\
+        circle_shader_data, circle_vertex_array, circle_shader, texdata
 
     if _initialized:
         return
@@ -142,6 +183,43 @@ def init():
 
     }
     """
+    oval_vshader_code = """
+        #version 330 core
+
+        in float idx;
+
+        uniform float ratio;
+        uniform float circle_prec;
+        uniform mat4 model;
+        uniform mat4 view;
+        uniform mat4 projection;
+        uniform float vcoord;
+
+        out vec2 coord;
+
+        vec4 vertex(float num, float den) {
+
+            float r = num / den;
+            float rad;
+            if (r > .5f)
+                rad = 1.f - ((r * 2.f) - 1.f);
+            else
+                rad = r * 2.f;
+
+            float rt = ratio + (1.f - ratio) * rad;
+            float ang = radians(r * 360.0f);
+
+            return vec4(cos(ang), sin(ang) * rt, 0.0f, 1.0f);
+
+        }
+
+        void main() {
+
+            gl_Position = projection * view * model * vertex(gl_VertexID, circle_prec + idx);
+            coord = vec2(gl_VertexID / circle_prec, vcoord);
+
+        }
+        """
     circlefill_vshader_code = """
     #version 330 core
     
@@ -289,39 +367,29 @@ def init():
     circle_shader_data.compile_vertex_shader('circlefill', shader_code=circlefill_vshader_code)
     circle_shader_data.compile_fragment_shader('circle', shader_code=circle_fshader_code)
 
+    circle_shader_data.compile_vertex_shader('oval', shader_code=oval_vshader_code)
+
     circle_shader_data.compile_vertex_shader('arc', shader_code=arc_vshader_code)
     circle_shader_data.compile_vertex_shader('pie', shader_code=pie_vshader_code)
 
     circle_shader_data.link('circle_shader', vertex='circle', fragment='circle')
+    circle_shader_data.link('oval_shader', vertex='oval', fragment='circle')
     circle_shader_data.link('circlefill_shader', vertex='circlefill', fragment='circle')
     circle_shader_data.link('arc_shader', vertex='arc', fragment='circle')
     circle_shader_data.link('pie_shader', vertex='pie', fragment='circle')
 
-    circle_shader = circle_shader_data.build(
-        'circle_shader',
-        "circle_prec", "model", "view", "projection", "vcoord", "tex", "color", "solidcolor",
-    )
-
-    circlefill_shader = circle_shader_data.build(
-        'circlefill_shader',
-        "circle_prec", "model", "view", "projection", "vcoord", "tex", "color", "solidcolor",
-    )
-
-    arc_shader = circle_shader_data.build(
-        'arc_shader',
-        "angle", "theta", "arc_prec", "model", "view", "projection", "vcoord", "tex", "color", "solidcolor"
-    )
-
-    pie_shader = circle_shader_data.build(
-        'pie_shader',
-        "angle", "theta", "arc_prec", "model", "view", "projection", "vcoord", "tex", "color", "solidcolor",
-    )
+    circle_shader = circle_shader_data.build('circle_shader')
+    oval_shader = circle_shader_data.build('oval_shader')
+    circlefill_shader = circle_shader_data.build('circlefill_shader')
+    arc_shader = circle_shader_data.build('arc_shader')
+    pie_shader = circle_shader_data.build('pie_shader')
 
     # endregion
 
     # region - - -- ----==<[ VAOS ]>==---- -- - -
 
     circle_vertex_array = VertexArray(circle_vertex_data, 'indices', circle_shader)
+    oval_vertex_array = VertexArray(circle_vertex_data, 'indices', oval_shader)
     circlefill_vertex_array = VertexArray(circle_vertex_data, 'indices', circlefill_shader)
     arc_vertex_array = VertexArray(circle_vertex_data, 'indices', arc_shader)
     pie_vertex_array = VertexArray(circle_vertex_data, 'indices', pie_shader)
@@ -354,10 +422,83 @@ def init():
         window.blend_mode = current
 
 
+    def ellipse_line(window, view, projection, position, rotation, radii, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, Vec4, int, Optional[TexDescriptor], float) -> None
+        count = max(8, min(precision, MAX_PRECISION))
+        model = FrozenMat4.transform(Vec4(position, 0., 1.), rotation, Vec4(radii, 0., 1.))
+
+        current = window.blend_mode
+        window.blend_mode = blend
+        with circle_vertex_array.render(GL_LINE_STRIP, count + 1) as shader:   # type: ShaderProgram
+            shader.load1f('circle_prec', count)
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load1f('vcoord', vcoord)
+            if isinstance(tex, TexDescriptor):
+                shader.load_sampler2d('tex', tex.id, 0)
+                shader.load1i('solidcolor', 0)
+            else:
+                shader.load_sampler2d('tex', texdata['circle_line_tex'].id, 0)
+                shader.load1i('solidcolor', 1)
+            shader.load4f('color', *color)
+
+        window.blend_mode = current
+
+
+    def oval_line(window, view, projection, position, rotation, size, radii, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, float, Vec4, int, Optional[TexDescriptor], float) -> None
+        count = max(8, min(precision, MAX_PRECISION))
+        model = FrozenMat4.transform(Vec4(position, 0., 1.), rotation, Vec4(size, 0., 1.))
+
+        current = window.blend_mode
+        window.blend_mode = blend
+        with oval_vertex_array.render(GL_LINE_STRIP, count + 1) as shader:   # type: ShaderProgram
+            shader.load1f('ratio', min(radii) / max(radii))
+            shader.load1f('circle_prec', count)
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load1f('vcoord', vcoord)
+            if isinstance(tex, TexDescriptor):
+                shader.load_sampler2d('tex', tex.id, 0)
+                shader.load1i('solidcolor', 0)
+            else:
+                shader.load_sampler2d('tex', texdata['circle_line_tex'].id, 0)
+                shader.load1i('solidcolor', 1)
+            shader.load4f('color', *color)
+
+        window.blend_mode = current
+
+
     def circle_fill(window, view, projection, position, rotation, radius, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
         # type: (GLWindow, Mat4, Mat4, Vec2, float, float, Vec4, int, Optional[TexDescriptor], float) -> None
         count = max(8, min(precision, MAX_PRECISION))
         model = FrozenMat4.transform(Vec4(position, 0., 1.), rotation, Vec4(radius, radius, 0., 1.))
+
+        current = window.blend_mode
+        window.blend_mode = blend
+        with circlefill_vertex_array.render(GL_TRIANGLE_FAN, count + 2) as shader:   # type: ShaderProgram
+            shader.load1f('circle_prec', count)
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load1f('vcoord', vcoord)
+            if isinstance(tex, TexDescriptor):
+                shader.load_sampler2d('tex', tex.id, 0)
+                shader.load1i('solidcolor', 0)
+            else:
+                shader.load_sampler2d('tex', texdata['circle_line_tex'].id, 0)
+                shader.load1i('solidcolor', 1)
+            shader.load4f('color', *color)
+
+        window.blend_mode = current
+
+
+    def ellipse_fill(window, view, projection, position, rotation, radii, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, Vec4, int, Optional[TexDescriptor], float) -> None
+        count = max(8, min(precision, MAX_PRECISION))
+        model = FrozenMat4.transform(Vec4(position, 0., 1.), rotation, Vec4(radii, 0., 1.))
 
         current = window.blend_mode
         window.blend_mode = blend
@@ -412,8 +553,42 @@ def init():
         window.blend_mode = current
 
 
-    def pie_line(window, view, projection, position, rotation, radius, start, end, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+    def arc_ellipse_line(window, view, projection, position, rotation, radii, start, end, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, float, float, Vec4, float, Optional[TexDescriptor], float, BlendMode) -> None
+        a = start % 360.
+        b = end % 360.
+        if b < a:
+            theta = (360. - a) + b
+        else:
+            theta = b - a
+        if theta == 0:
+            return
 
+        model = FrozenMat4.transform(Vec4(position, 0., 1.), rotation, Vec4(radii, 0., 1.))
+        arc_prec = int(max(2, min(precision, MAX_PRECISION -1)))
+        current = window.blend_mode
+        window.blend_mode = blend
+        with arc_vertex_array.render(GL_LINE_STRIP, arc_prec) as shader:   # type: ShaderProgram
+            shader.load1f('angle', a + 1)
+            shader.load1f('theta', theta)
+            shader.load1f('arc_prec', arc_prec)
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load1f('vcoord', vcoord)
+            if isinstance(tex, TexDescriptor):
+                shader.load_sampler2d('tex', tex.id, 0)
+                shader.load1i('solidcolor', 0)
+            else:
+                shader.load_sampler2d('tex', texdata['circle_line_tex'].id, 0)
+                shader.load1i('solidcolor', 1)
+            shader.load4f('color', *color)
+
+        window.blend_mode = current
+
+
+    def pie_line(window, view, projection, position, rotation, radius, start, end, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, float, float, float, Vec4, int, Optional[TexDescriptor], float, BlendMode) -> None
         a = start % 360.
         b = end % 360.
         if b < a:
@@ -445,6 +620,41 @@ def init():
 
         window.blend_mode = current
 
+
+    def pie_ellipse_line(window, view, projection, position, rotation, radii, start, end, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, float, float, Vec4, int, Optional[TexDescriptor], float, BlendMode) -> None
+        a = start % 360.
+        b = end % 360.
+        if b < a:
+            theta = (360. - a) + b
+        else:
+            theta = b - a
+        if theta == 0:
+            return
+
+        model = FrozenMat4.transform(Vec4(position, 0., 1.), rotation, Vec4(radii, 0., 1.))
+        arc_prec = int(max(5, precision / (360. / theta)))
+        current = window.blend_mode
+        window.blend_mode = blend
+        with pie_vertex_array.render(GL_LINE_STRIP, arc_prec) as shader:  # type: ShaderProgram
+            shader.load1f('angle', a)
+            shader.load1f('theta', theta)
+            shader.load1f('arc_prec', arc_prec - 1)
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load1f('vcoord', vcoord)
+            if isinstance(tex, TexDescriptor):
+                shader.load_sampler2d('tex', tex.id, 0)
+                shader.load1i('solidcolor', 0)
+            else:
+                shader.load_sampler2d('tex', texdata['circle_line_tex'].id, 0)
+                shader.load1i('solidcolor', 1)
+            shader.load4f('color', *color)
+
+        window.blend_mode = current
+
+
     def pie_fill(window, view, projection, position, rotation, radius, start, end, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
 
         a = start % 360.
@@ -457,6 +667,40 @@ def init():
             return
 
         model = FrozenMat4.transform(Vec4(position, 0., 1.), rotation, Vec4(radius, radius, 0., 1.))
+        arc_prec = int(max(5, precision / (360. / theta)))
+        current = window.blend_mode
+        window.blend_mode = blend
+        with pie_vertex_array.render(GL_TRIANGLE_FAN, arc_prec) as shader:  # type: ShaderProgram
+            shader.load1f('angle', a)
+            shader.load1f('theta', theta)
+            shader.load1f('arc_prec', arc_prec - 1)
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load1f('vcoord', vcoord)
+            if isinstance(tex, TexDescriptor):
+                shader.load_sampler2d('tex', tex.id, 0)
+                shader.load1i('solidcolor', 0)
+            else:
+                shader.load_sampler2d('tex', texdata['circle_line_tex'].id, 0)
+                shader.load1i('solidcolor', 1)
+            shader.load4f('color', *color)
+
+        window.blend_mode = current
+
+
+    def pie_ellipse_fill(window, view, projection, position, rotation, radii, start, end, color, precision, tex=None, vcoord=0., blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, Vec2, float, float, Vec4, float, Optional[TexDescriptor], float, BlendMode) -> None
+        a = start % 360.
+        b = end % 360.
+        if b < a:
+            theta = (360. - a) + b
+        else:
+            theta = b - a
+        if theta == 0:
+            return
+
+        model = FrozenMat4.transform(Vec4(position, 0., 1.), rotation, Vec4(radii, 0., 1.))
         arc_prec = int(max(5, precision / (360. / theta)))
         current = window.blend_mode
         window.blend_mode = blend

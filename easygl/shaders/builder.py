@@ -73,6 +73,11 @@ class ShaderProgramData(object):
             with open(fname) as fsh:
                 lines = fsh.readlines()
                 fragment_code = "\n".join(lines)
+        elif 'shader_location' in kwargs:
+            fname = kwargs['shader_location']
+            with open(fname) as fsh:
+                lines = fsh.readlines()
+                fragment_code = "\n".join(lines)
         elif 'shader_code' in kwargs:
             fragment_code = kwargs.get('shader_code')
         else:
@@ -93,8 +98,13 @@ class ShaderProgramData(object):
         # type: (str, ...) -> None
         if 'shader_file' in kwargs:
             fname = path.join(self._base_dir, kwargs.get('shader_file'))
-            with open(fname) as fsh:
-                vertex_code = "\n".join(fsh.readlines())
+            with open(fname) as vsh:
+                vertex_code = "\n".join(vsh.readlines())
+        elif 'shader_location' in kwargs:
+            fname = kwargs['shader_location']
+            with open(fname) as vsh:
+                lines = vsh.readlines()
+                vertex_code = "\n".join(lines)
         elif 'shader_code' in kwargs:
             vertex_code = kwargs.get('shader_code')
         else:
@@ -115,8 +125,13 @@ class ShaderProgramData(object):
         # type: (str, ...) -> None
         if 'shader_file' in kwargs:
             fname = path.join(self._base_dir, kwargs.get('shader_file'))
-            with open(fname) as fsh:
-                geometry_code = "\n".join(fsh.readlines())
+            with open(fname) as gsh:
+                geometry_code = "\n".join(gsh.readlines())
+        elif 'shader_location' in kwargs:
+            fname = kwargs['shader_location']
+            with open(fname) as gsh:
+                lines = gsh.readlines()
+                geometry_code = "\n".join(lines)
         elif 'shader_code' in kwargs:
             geometry_code = kwargs.get('shader_code')
         else:

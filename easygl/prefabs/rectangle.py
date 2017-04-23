@@ -160,10 +160,7 @@ def init():
 
     rect_shader_data.link('rect_shader', vertex='rect', fragment='rect')
 
-    rect_shader = rect_shader_data.build(
-        'rect_shader',
-        'origin', 'model', 'view', 'projection', 'vcoord', 'color', 'tex', 'solidcolor'
-    )
+    rect_shader = rect_shader_data.build('rect_shader')
 
     # endregion
 

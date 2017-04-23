@@ -153,10 +153,7 @@ def init():
 
     line_shader_data.link('line', vertex='line', fragment='line')
 
-    line_shader = line_shader_data.build(
-        'line'  # ,
-        # 'view', 'projection', 'start_color', 'end_color', 'point_count', 'vcoord', 'tex', 'solidcolor'
-    )
+    line_shader = line_shader_data.build('line')
 
     # endregion
 
