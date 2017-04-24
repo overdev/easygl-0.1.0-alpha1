@@ -27,9 +27,10 @@
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+import struct
+import math
 from typing import Union, Sequence, Iterable, Container
 from easygl.arrays.datatypes import DType
-import struct
 
 
 __all__ = [
@@ -373,6 +374,45 @@ class Vec2(Arithvector):
 
     # endregion
 
+    # region - - -- ----==<[ OTHER ]>==---- -- - -
+
+    def hypot(self):
+        # type: () -> None
+        return self.x ** 2 + self.y ** 2
+
+    def dot(self, other):
+        # type: (Vec2) -> float
+        return ((self.x * other.x) +
+                (self.y * other.y))
+
+    def cross(self, other):
+        # type: (Vec2) -> float
+        return self.x * other.y - self.y * other.x
+
+    def length(self):
+        # type: () -> float
+        return math.sqrt(self.hypot())
+
+    def normalize(self):
+        # type: () -> Vec2
+        magnitude = self.length()
+        if magnitude != 0.:
+            self.x /= magnitude
+            self.y /= magnitude
+        return self
+
+    def normalized(self):
+        # type: () -> Vec2
+        magnitude = self.length()
+        if magnitude != 0.:
+            return Vec2(
+                self.x / magnitude,
+                self.y / magnitude,
+            )
+        return Vec2(0., 0.)
+
+    # endregion
+
     @staticmethod
     def pack_values(*values, as_double=False):
         if as_double:
@@ -488,6 +528,49 @@ class Vec3(Arithvector):
             super(Vec3, self).__setattr__(name, float(value))
         else:
             raise AttributeError("Vec3 object has no '{}' attribute.".format(name))
+
+    # endregion
+
+    # region - - -- ----==<[ OTHER ]>==---- -- - -
+
+    def hypot(self):
+        # type: () -> None
+        return self.x ** 2 + self.y ** 2 + self.z ** 2
+
+    def dot(self, other):
+        # type: (Union[Vec3, Vec4]) -> float
+        return ((self.x * other.x) +
+                (self.y * other.y) +
+                (self.z * other.z))
+
+    def cross(self, other):
+        # type: (Union[Vec3, Vec4]) -> Vec3
+        return Vec3(self.x * other.z - self.z * other.y,
+                    self.y * other.x - self.x * other.z,
+                    self.z * other.y - self.y * other.x)
+
+    def length(self):
+        # type: () -> float
+        return math.sqrt(self.hypot())
+
+    def normalize(self):
+        # type: () -> Vec3
+        magnitude = self.length()
+        if magnitude != 0.:
+            self.x /= magnitude
+            self.y /= magnitude
+            self.z /= magnitude
+
+    def normalized(self):
+        # type: () -> Vec3
+        magnitude = self.length()
+        if magnitude != 0.:
+            return Vec3(
+                self.x / magnitude,
+                self.y / magnitude,
+                self.z / magnitude
+            )
+        return Vec3(0., 0., 0.)
 
     # endregion
 
@@ -609,6 +692,51 @@ class Vec4(Arithvector):
             super(Vec4, self).__setattr__(name, float(value))
         else:
             raise AttributeError("Vec4 object has no '{}' attribute.".format(name))
+
+    # endregion
+
+    # region - - -- ----==<[ OTHER ]>==---- -- - -
+
+    def hypot(self):
+        # type: () -> None
+        return self.x ** 2 + self.y ** 2 + self.z ** 2
+
+    def dot(self, other):
+        # type: (Union[Vec3, Vec4]) -> float
+        return ((self.x * other.x) +
+                (self.y * other.y) +
+                (self.z * other.z))
+
+    def cross(self, other):
+        # type: (Union[Vec3, Vec4]) -> Vec4
+        return  Vec4(self.x * other.z - self.z * other.y,
+                     self.y * other.x - self.x * other.z,
+                     self.z * other.y - self.y * other.x,
+                     1.)
+
+    def length(self):
+        # type: () -> float
+        return math.sqrt(self.hypot())
+
+    def normalize(self):
+        # type: () -> Vec4
+        magnitude = self.length()
+        if magnitude != 0.:
+            self.x /= magnitude
+            self.y /= magnitude
+            self.z /= magnitude
+
+    def normalized(self):
+        # type: () -> Vec4
+        magnitude = self.length()
+        if magnitude != 0.:
+            return Vec4(
+                self.x / magnitude,
+                self.y / magnitude,
+                self.z / magnitude,
+                1.
+            )
+        return Vec4(0., 0., 0., 1.)
 
     # endregion
 

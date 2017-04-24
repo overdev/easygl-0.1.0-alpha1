@@ -92,6 +92,7 @@ def _get_startpoints(start, end, thickness, alignment=0.5):
 
     return (ax, ay), (bx, by)
 
+
 def _get_endpoints(start, end, thickness, alignment=0.5):
     # type: (tuple, tuple) -> tuple
     alignment = max(0., min(alignment, 1.))
@@ -116,12 +117,11 @@ def _get_endpoints(start, end, thickness, alignment=0.5):
 
     return (ax, ay), (bx, by)
 
-points = ((0, 100), (20, 100), (25, 100), (75, 100), (150, 100))
 
-
-def stripe(window, view, projection, points, thikcness, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
+def stripe(window, view, projection, points, color_a, color_b=None, tex=None, vcoord=0., blend=BlendMode.alpha,
+           update=True):
+    # type: (GLWindow, Mat4, Mat4, Union[tuple, list], Vec4, Optional[Vec4], Optional[TextDescriptor], float, BlendMode, bool) -> None
     pass
-
 
 # region - - -- ----==<[ BAKER ]>==---- -- - -
 
@@ -160,14 +160,13 @@ def init():
 
     # endregion
 
-
     # region - - -- ----==<[ TEXTURES ]>==---- -- - -
 
     s = pg.Surface((4, 1))
     s.fill((255, 255, 255))
     texdata = TextureData()
-    texdata.create_from_surface('line_tex', s, False, False, MipMap.linear_linear, Wrap.repeat,
-                                Filter.linear)
+    texdata.create_from_surface('line_tex', s, False, False, MipMap.linear_linear, Wrap.repeat, Filter.linear)
+
     # endregion
 
     # region - - -- ----==<[ SHADERS ]>==---- -- - -
@@ -219,7 +218,6 @@ def init():
     line_shader_data.compile_fragment_shader('line', shader_code=line_fshader_code)
 
     line_shader_data.link('line', vertex='line', fragment='line')
-
     line_shader = line_shader_data.build('line')
 
     # endregion
@@ -232,8 +230,9 @@ def init():
 
     # region - - -- ----==<[ RENDER FUNCTIONS ]>==---- -- - -
 
-    def stripe(window, view, projection, points, thickness, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
-        if len(points) < 2:
+    def stripe(window, view, projection, points, color_a, color_b=None, tex=None, vcoord=0., blend=BlendMode.alpha, update=True):
+        # type: (GLWindow, Mat4, Mat4, Union[tuple, list], Vec4, Optional[Vec4], Optional[TextDescriptor], float, BlendMode, bool) -> None
+        if len(points) < 4:
             return
 
         current = window.blend_mode
