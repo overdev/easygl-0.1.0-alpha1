@@ -399,6 +399,8 @@ class Vec2(Arithvector):
         if magnitude != 0.:
             self.x /= magnitude
             self.y /= magnitude
+        else:
+            self.x = self.y = 0.
         return self
 
     def normalized(self):
@@ -560,6 +562,9 @@ class Vec3(Arithvector):
             self.x /= magnitude
             self.y /= magnitude
             self.z /= magnitude
+        else:
+            self.x = self.y = self.z = 0.
+        return self
 
     def normalized(self):
         # type: () -> Vec3
@@ -725,6 +730,10 @@ class Vec4(Arithvector):
             self.x /= magnitude
             self.y /= magnitude
             self.z /= magnitude
+        else:
+            self.x = self.y = self.z = 0.
+            self.w = 1.
+        return self
 
     def normalized(self):
         # type: () -> Vec4

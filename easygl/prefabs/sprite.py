@@ -31,7 +31,7 @@ import math
 from easygl.arrays import VertexArrayData, attribute, vertex, vertex_copy, DType
 from easygl.shaders import ShaderProgramData, ShaderProgram
 from easygl.arrays.arraybuffers import VertexArray
-from easygl.structures import Vec2, Vec4, Mat4
+from easygl.structures import Vec2, Vec4, Mat4, FrozenMat4
 from easygl.textures import TexDescriptor, TexSubImageDescriptor
 from easygl.display import BlendMode
 from OpenGL.GL import GL_TRIANGLES
@@ -40,14 +40,26 @@ from OpenGL.GL import GL_TRIANGLES
 __all__ = [
     'SpriteState',
     'AnimationState',
+    'sprite',
+    'sprite_subimage',
 ]
 
 _initialized = False
 # SpriteState = None
 
 
+def sprite(window, view, projection, texture, position, rotation, scale, origin, color, blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, TexDescriptor, Vec2, float, Vec2, Vec2, Vec4, BlendMode) -> None
+    pass
+
+
+def sprite_subimage(window, view, projection, subimagedescriptor, subimage, position, rotation, scale, origin, color, blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, TexSubImageDescriptor, Vec2, float, Vec2, Vec2, Vec4, BlendMode) -> None
+    pass
+
+
 def init():
-    global SpriteState, AnimationState, _initialized
+    global SpriteState, AnimationState, _initialized, sprite, sprite_subimage
 
     if _initialized:
         return
@@ -61,11 +73,11 @@ def init():
         attribute('texcoord', DType.float_v2)
 
     with SpriteVertexData.new_primitive('sprite', 6):
-        vertex(position=(.5, .5), texcoord=(1.0, 1.0))  # Top Right
-        vertex(position=(.5, -.5), texcoord=(1.0, 0.0))  # Bottom Right
-        vertex(position=(-.5, .5), texcoord=(0.0, 1.0))  # Top Left
+        vertex(position=(1., 1.), texcoord=(1., 1.))  # Top Right
+        vertex(position=(1., 0.), texcoord=(1., 0.))  # Bottom Right
+        vertex(position=(0., 1.), texcoord=(0., 1.))  # Top Left
         vertex_copy(1)
-        vertex(position=(-.5, -.5), texcoord=(0.0, 0.0))  # Bottom Left
+        vertex(position=(0., 0.), texcoord=(0., 0.))  # Bottom Left
         vertex_copy(2)
 
     AnimatedVertexData = VertexArrayData()
@@ -91,6 +103,7 @@ def init():
     in vec2 position;
     in vec2 texcoord;
     
+    uniform vec2 origin;
     uniform mat4 model;
     uniform mat4 view;
     uniform mat4 projection;
@@ -99,7 +112,7 @@ def init():
     
     void main() {
     
-        gl_Position = projection * view * model * vec4(position, 0.0f, 1.0f);
+        gl_Position = projection * view * model * vec4(position - origin, 0.0f, 1.0f);
         coord = texcoord;
     }
     """
@@ -122,6 +135,7 @@ def init():
     
     in vec2 position;
     
+    uniform vec2 origin;
     uniform mat4 model;
     uniform mat4 view;
     uniform mat4 projection;
@@ -186,8 +200,45 @@ def init():
 
     # region - - -- ----==<[ RENDER FUNCTIONS ]>==---- -- - -
 
-    def draw_sprite(texture, position):
-        pass
+    def sprite(window, view, projection, texture, position, rotation, scale, origin, color, blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, TexDescriptor, Vec2, float, Vec2, Vec2, Vec4, BlendMode) -> None
+        model = FrozenMat4.transform(
+            Vec4(position, 0., 1.),
+            rotation,
+            Vec4(scale * texture.size, 0., 1.)
+        )
+        current = window.blend_mode
+        window.blend_mode = blend
+        with sprite_array.render(GL_TRIANGLES) as shader:  # type: ShaderProgram
+            shader.load2f('origin', *origin)
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load4f('color', *color)
+            shader.load_sampler2d('tex', texture.id, 0)
+        window.blend_mode = current
+
+
+    def sprite_subimage(window, view, projection, subimagedescriptor, subimage, position, rotation, scale, origin, color, blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, TexSubImageDescriptor, Vec2, float, Vec2, Vec2, Vec4, BlendMode) -> None
+        model = FrozenMat4.transform(
+            Vec4(position, 0., 1.),
+            rotation,
+            Vec4(scale * subimagedescriptor.image_size, 0., 1.)
+        )
+        current = window.blend_mode
+        window.blend_mode = blend
+        image_index = int(round(subimage, 0)) % subimagedescriptor.image_count
+        l, t, r, b = subimagedescriptor.bboxes[image_index]
+
+        with anim_sprite_array.render(GL_TRIANGLES)  as shader:  # type: ShaderProgram
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load4f('lefttoprightbottom', l, t, r, b)
+            shader.load4f('color', *color)
+            shader.load_sampler2d('tex', subimagedescriptor.tex_descriptor.id, 0)
+        window.blend_mode = current
 
     # endregion
 

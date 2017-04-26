@@ -53,29 +53,141 @@ __all__ = [
 ]
 
 
-MouseMotion = nt("MouseMotion", "position motion lbutton mbutton rbutton")
+class MouseMotion(nt("MouseMotion", "position motion lbutton mbutton rbutton")):
 
-LeftButtonDown = nt("LeftButtonDown", "position x y")
-MiddleButtonDown = nt("MiddleButtonDown", "position x y")
-RightButtonDown = nt("RightButtonDown", "position x y")
-MouseWheelDown = nt("MouseWheelDown", "position x y")
-LeftButtonUp = nt("LeftButtonUp", "position x y")
-MiddleButtonUp = nt("MiddleButtonUp", "position x y")
-RightButtonUp = nt("RightButtonUp", "position x y")
-MouseWheelUp = nt("MouseWheelUp", "position x y")
-
-KeyDown = nt("KeyDown", "key char mod ctrl shift alt")
-KeyUp = nt("KeyUp", "key mod ctrl shift alt")
-
-VideoResize = nt("VideoResize", "width height size")
-VideoExpose = nt("VideoExpose", "milliseconds datetime")
-Focus = nt("MouseFocus", "mouse input milliseconds")
+    @property
+    def type(self):
+        return self.__class__
 
 
-CloseWindow = nt("CloseWindow", "milliseconds datetime")
+class LeftButtonDown(nt("LeftButtonDown", "position x y")):
 
-JoyAxis = nt("JoyAxis", "id axis value")
-JoyBall = nt("JoyBall", "id ball motion")
-JoyHat = nt("JoyHat", "id hat value")
-JoyButtonDown = nt("JoyButtonDown", "id button")
-JoyButtonUp = nt("JoyButtonUp", "id button")
+    @property
+    def type(self):
+        return self.__class__
+
+
+class MiddleButtonDown(nt("MiddleButtonDown", "position x y")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class RightButtonDown(nt("RightButtonDown", "position x y")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class MouseWheelDown(nt("MouseWheelDown", "position x y")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class LeftButtonUp(nt("LeftButtonUp", "position x y")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class MiddleButtonUp(nt("MiddleButtonUp", "position x y")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class RightButtonUp(nt("RightButtonUp", "position x y")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class MouseWheelUp(nt("MouseWheelUp", "position x y")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class KeyDown(nt("KeyDown", "key char mod ctrl shift alt")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class KeyUp(nt("KeyUp", "key mod ctrl shift alt")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class VideoResize(nt("VideoResize", "width height size")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class VideoExpose(nt("VideoExpose", "milliseconds datetime")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class Focus(nt("MouseFocus", "mouse input milliseconds")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class CloseWindow(nt("CloseWindow", "milliseconds datetime")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class JoyAxis(nt("JoyAxis", "id axis value")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class JoyBall(nt("JoyBall", "id ball motion")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class JoyHat(nt("JoyHat", "id hat value")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class JoyButtonDown (nt("JoyButtonDown", "id button")):
+
+    @property
+    def type(self):
+        return self.__class__
+
+
+class JoyButtonUp (nt("JoyButtonUp", "id button")):
+
+    @property
+    def type(self):
+        return self.__class__
