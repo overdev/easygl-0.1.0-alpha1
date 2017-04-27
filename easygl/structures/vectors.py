@@ -29,6 +29,7 @@
 
 import struct
 import math
+from collections import namedtuple as nt
 from typing import Union, Sequence, Iterable, Container
 from easygl.arrays.datatypes import DType
 
@@ -37,6 +38,7 @@ __all__ = [
     'Vec2',
     'Vec3',
     'Vec4',
+    'FrozenVec4',
 ]
 
 V2 = "xy yx u v uv vu".split()
@@ -785,3 +787,67 @@ class Vec4(Arithvector):
         else:
             fmt = DType.float_v4.format
         self.x, self.y, self.z, self.w = struct.unpack_from(fmt, buffer, offset)
+
+
+class FrozenVec4(nt('FrozenVec4', 'x y z w'), Arithvector):
+
+    def __getattr__(self, name):
+        if name[0] in 'xyzw':
+            swz = 'xyzw'
+        elif name[0] in 'rgba':
+            swz = 'rgba'
+        else:
+            raise AttributeError("Vec4 has no '{}' attribute.".format(name))
+
+        if len(name) == 1:
+            attr = {'x': 'x', 'y': 'y', 'z': 'z', 'w': 'w', 'r': 'x', 'g': 'y', 'b': 'z', 'a': 'w'}
+            return getattr(self, attr[name])
+        elif len(name) not in (2, 3, 4):
+            raise AttributeError("Attribute swizzling is too long ({}).".format(len(name)))
+        else:
+            v = {2: Vec2, 3: Vec3, 4: FrozenVec4}[len(name)]
+
+        # i = [self.x, self.y, self.z, self.w]
+        try:
+            return v(*(self[swz.index(ch)] for ch in name))
+        except ValueError:
+            raise AttributeError("Vec4 '{}' swizzled with invalid attribute(s).".format(name))
+
+    # del __iadd__, __isub__, __imul__, __itruediv__, __ifloordiv__, __imod__
+
+    # region - - -- ----==<[ OTHER ]>==---- -- - -
+
+    def hypot(self):
+        # type: () -> None
+        return self.x ** 2 + self.y ** 2 + self.z ** 2
+
+    def dot(self, other):
+        # type: (Union[Vec3, Vec4, FrozenVec4]) -> float
+        return ((self.x * other.x) +
+                (self.y * other.y) +
+                (self.z * other.z))
+
+    def cross(self, other):
+        # type: (Union[Vec3, Vec4]) -> Vec4
+        return  FrozenVec4(self.x * other.z - self.z * other.y,
+                     self.y * other.x - self.x * other.z,
+                     self.z * other.y - self.y * other.x,
+                     1.)
+
+    def length(self):
+        # type: () -> float
+        return math.sqrt(self.hypot())
+
+    def normalized(self):
+        # type: () -> FrozenVec4
+        magnitude = self.length()
+        if magnitude != 0.:
+            return FrozenVec4(
+                self.x / magnitude,
+                self.y / magnitude,
+                self.z / magnitude,
+                1.
+            )
+        return FrozenVec4(0., 0., 0., 1.)
+
+    # endregion

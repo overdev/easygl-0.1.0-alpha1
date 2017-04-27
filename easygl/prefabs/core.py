@@ -30,7 +30,8 @@
 
 from easygl.arrays import VertexArrayData, VertexArray, DType, vertex, vertex_copy, attribute
 from easygl.shaders import ShaderProgramData, ShaderProgram
-
+from easygl.display.window import BlendMode
+from easygl.structures import Vec4, Vec2, Vec3, FrozenMat4
 
 INITIALIZED_DATA = 0
 
@@ -68,3 +69,114 @@ LINE = LINE_SINGLE | LINE_MULTI
 ALL = (1 << 20) - 1
 
 MAX_PRECISION = 721
+
+
+class RenderState(object):
+
+    def __init__(self):
+        self._position = Vec4(0., 0., 0., 1.)
+        self._origin = Vec2(.5, .5)
+        self._rotation = 0.
+        self._scaling = Vec4(1., 1., 0., 1.)
+        self._color = Vec4(1., 1., 1., 1.)
+        self._endcolor = Vec4(1., 1., 1., 1.)
+        self._blend = BlendMode.alpha
+        self._texture = None
+        self._model = None
+        self._updt_model = True
+
+    # region - - -- ----==<[ POSITION ]>==---- -- - -
+    
+    @property
+    def x(self):
+        return self._position.x
+
+    @x.setter
+    def x(self, value):
+        self._updt_model = True
+        self._position.x = float(value)
+
+    @property
+    def y(self):
+        return self._position.y
+
+    @y.setter
+    def y(self, value):
+        self._updt_model = True
+        self._position.y = float(value)
+
+    @property
+    def z(self):
+        return self._position.z
+
+    @z.setter
+    def z(self, value):
+        self._updt_model = True
+        self._position.z = float(value)
+    
+    @property
+    def position(self):
+        return self._position
+
+    # endregion
+    
+    # region - - -- ----==<[ ROTATION ]>==---- -- - -
+
+    @property
+    def rotation(self):
+        return self._rotation
+    
+    @rotation.setter
+    def rotation(self, value):
+        self._updt_model = True
+        self._rotation = float(value)
+    
+    # endregion
+    
+    # region - - -- ----==<[ SCALING ]>==---- -- - -
+
+    @property
+    def x_scale(self):
+        return self._scaling.x
+    
+    @x_scale.setter
+    def x_scale(self, value):
+        self._updt_model = True
+        self._scaling.x = float(value)
+
+    @property
+    def y_scale(self):
+        return self._scaling.y
+
+    @y_scale.setter
+    def y_scale(self, value):
+        self._updt_model = True
+        self._scaling.y = float(value)
+
+    @property
+    def z_scale(self):
+        return self._scaling.z
+
+    @z_scale.setter
+    def z_scale(self, value):
+        self._updt_model = True
+        self._scaling.z = float(value)
+
+    @property
+    def scaling(self):
+        return self._scaling
+    
+    # endregion
+
+    def get_model(self):
+        # type: () -> FrozenMat4
+        return FrozenMat4.transform(self._position, self._rotation, self._scaling)
+
+    def update_model(self):
+        # type: () -> None
+        if self._updt_model:
+            self._model = self.get_model()
+            self._updt_model = False
+
+
+    """End of RenderState class"""
