@@ -57,14 +57,14 @@ class ShaderProgramData(object):
         self._uniforms = {}
 
     def _extract_uniforms(self, lines):
-        uniforms = set()
+        uniforms = []
         for line in lines:   # type: str
             s = line.lstrip(' ')
             if s.startswith('uniform'):
                 uniform = s.split()[-1].rstrip(';')
                 if uniform not in uniforms:
-                    uniforms.add(uniform)
-        return uniforms
+                    uniforms.append(uniform)
+        return tuple(uniforms)
 
     def compile_fragment_shaders(self, **kwargs):
         # type: (...) -> None
@@ -90,6 +90,7 @@ class ShaderProgramData(object):
             raise ValueError("'shader_file' or 'shader_code' keyword argument expected.")
 
         self._frag_uniforms[frag_shader_name] = self._extract_uniforms(fragment_code.split('\n'))
+        # print(frag_shader_name, '--------------->', self._frag_uniforms[frag_shader_name])
 
         fragment_id = GL.glCreateShader(GL.GL_FRAGMENT_SHADER)
         GL.glShaderSource(fragment_id, fragment_code)
@@ -186,19 +187,20 @@ class ShaderProgramData(object):
             message = GL.glGetProgramInfoLog(program).decode(errors='ignore')
             raise RuntimeError("ShaderProgramErrorMessage: '{}'".format(message))
 
-        uniforms = set()
+        uniforms = ()
         if vertex_id is not None:
             GL.glDetachShader(program, vertex_id)
-            uniforms.update(self._vert_uniforms[shaders['vertex']])
+            uniforms += self._vert_uniforms[shaders['vertex']]
         if geometry_id is not None:
             GL.glDetachShader(program, geometry_id)
-            uniforms.update(self._geom_uniforms[shaders['geometry']])
+            uniforms += self._geom_uniforms[shaders['geometry']]
         if fragment_id is not None:
             GL.glDetachShader(program, fragment_id)
-            uniforms.update(self._frag_uniforms[shaders['fragment']])
+            uniforms += self._frag_uniforms[shaders['fragment']]
 
         self._shaderprograms[program_name] = program
-        self._uniforms[program_name] = tuple(uniforms)
+        self._uniforms[program_name] = uniforms
+        print(program_name, '::', uniforms)
 
     def build(self, program_name, *uniforms):
         # type: (str, ...) -> ShaderProgram
@@ -206,4 +208,5 @@ class ShaderProgramData(object):
             raise ValueError("'{}' not found.".format(program_name))
         if len(uniforms) == 0:
             uniforms = self._uniforms[program_name]
+        # print("{} -> {}".format(program_name, uniforms))
         return ShaderProgram(self._shaderprograms[program_name], *uniforms)

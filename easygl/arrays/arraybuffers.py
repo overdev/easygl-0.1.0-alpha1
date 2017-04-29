@@ -70,7 +70,7 @@ class VertexArray(object):
         # Send the data over to the buffer
         num_bytes = len(arraydescriptor[data])
         GL.glBufferData(GL.GL_ARRAY_BUFFER, num_bytes, arraydescriptor[data], GL.GL_DYNAMIC_DRAW)
-        print("num_bytes:", num_bytes)
+        # print("num_bytes:", num_bytes)
 
         # Unbind the VAO first (Important)
         GL.glBindVertexArray(0)

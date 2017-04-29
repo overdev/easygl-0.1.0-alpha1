@@ -99,7 +99,7 @@ class GLWindow(object):
             pg.display.gl_set_attribute(pg.GL_MULTISAMPLESAMPLES, samples)
 
         surface = pg.display.set_mode(size, flags)
-        print(surface)
+        # print(surface)
         width, height = surface.get_size()
         pg.display.set_caption(title, title)
 
@@ -109,6 +109,8 @@ class GLWindow(object):
         GL.glClearColor(*color)
         GL.glViewport(0, 0, width, height)
 
+        self._handling_input = False
+        self._rendering = False
         self._close_request = False
         self._blend_mode = None
         self.blend_mode = blendmode
@@ -206,6 +208,9 @@ class GLWindow(object):
     @contextmanager
     def input(self, raw=False):
         # type: () -> None
+        if self._handling_input:
+            raise RuntimeError("Can't nest input processing contexts.")
+        self._handling_input = True
         time = pg.time.get_ticks()
         delta = time - self._input_time
         self._input_time = time
@@ -302,10 +307,14 @@ class GLWindow(object):
                 mouse_pos.y = self.height - mouse_pos.y
                 mouse_rel.y = -mouse_rel.y
             yield delta, events, keys, mouse_pos, mouse_rel
+        self._handling_input = False
 
     @contextmanager
     def rendering(self, clear_color=None):
         # type: (Optional[Union[Vec4, tuple, list]]) -> None
+        if self._rendering:
+            raise RuntimeError("Can't nest GLWindow rendering contexts.")
+        self._rendering = True
         time = pg.time.get_ticks()
         delta = time - self._render_time
         self._render_time = time
@@ -319,6 +328,7 @@ class GLWindow(object):
         if clear_color is not None:
             GL.glClearColor(*clear_color)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
+        self._rendering = False
 
     def close(self):
         # type: () -> None

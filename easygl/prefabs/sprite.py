@@ -31,7 +31,7 @@ import math
 from easygl.arrays import VertexArrayData, attribute, vertex, vertex_copy, DType
 from easygl.shaders import ShaderProgramData, ShaderProgram
 from easygl.arrays.arraybuffers import VertexArray
-from easygl.structures import Vec2, Vec4, Mat4, FrozenMat4
+from easygl.structures import Vec2, Vec3, Vec4, Mat4, FrozenMat4
 from easygl.textures import TexDescriptor, TexSubImageDescriptor
 from easygl.display import BlendMode
 from OpenGL.GL import GL_TRIANGLES
@@ -42,6 +42,7 @@ __all__ = [
     'AnimationState',
     'sprite',
     'sprite_subimage',
+    'sprite_nmap',
 ]
 
 _initialized = False
@@ -58,8 +59,13 @@ def sprite_subimage(window, view, projection, subimagedescriptor, subimage, posi
     pass
 
 
+def sprite_nmap(window, view, projection, diffuse, normalmap, position, rotation, scale, origin, view_pos, light_pos, blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, TexDescriptor, Texdescriptor, Vec2, float, Vec2, Vec2, Vec2, Vec2, BlendMode) -> None
+    pass
+
+
 def init():
-    global SpriteState, AnimationState, _initialized, sprite, sprite_subimage
+    global SpriteState, AnimationState, _initialized, sprite, sprite_subimage, sprite_nmap
 
     if _initialized:
         return
@@ -91,6 +97,21 @@ def init():
         vertex(position=(-.5, .5))  # Top Left
         vertex_copy(1)
         vertex(position=(-.5, -.5))  # Bottom Left
+        vertex_copy(2)
+
+    normalmap_vertexdata = VertexArrayData()
+
+    with normalmap_vertexdata.definition():
+        attribute('position', DType.float_v2)
+        attribute('normal', DType.float_v3)
+        attribute('texCoords', DType.float_v2)
+
+    with normalmap_vertexdata.new_primitive('nmap_sprite', 6):
+        vertex(position=(1., 1.), normal=(0., 0., 1.), texCoords=(1., 1.))  # Top Right
+        vertex(position=(1., 0.), normal=(0., 0., 1.), texCoords=(1., 0.))  # Bottom Right
+        vertex(position=(0., 1.), normal=(0., 0., 1.), texCoords=(0., 1.))  # Top Left
+        vertex_copy(1)
+        vertex(position=(0., 0.), normal=(0., 0., 1.), texCoords=(0., 0.))  # Bottom Left
         vertex_copy(2)
 
     # endregion
@@ -176,18 +197,94 @@ def init():
     
     }
     """
+    normalmap_vshader = """
+    #version 330 core
+    in vec2 position;
+    in vec3 normal;
+    in vec2 texCoords;
+    
+    // Declare an interface block; see 'Advanced GLSL' for what these are.
+    out VS_OUT {
+        vec3 FragPos;
+        vec3 Normal;
+        vec2 TexCoords;
+    } vs_out;
+    
+    uniform vec2 origin;
+    uniform mat4 projection;
+    uniform mat4 view;
+    uniform mat4 model;
+    
+    void main()
+    {
+        gl_Position = projection * view * model * vec4(position - origin, -3.0f, 1.0f);
+        vs_out.FragPos = vec3(model * vec4(position - origin, 0.0f, 1.0));
+        vs_out.TexCoords = texCoords;
+        
+        mat3 normalMatrix = transpose(inverse(mat3(model)));
+        vs_out.Normal = normalMatrix * normal;
+    }
+    """
+    normalmap_fshader = """
+    #version 330 core
+    out vec4 FragColor;
+    
+    in VS_OUT {
+        vec3 FragPos;
+        vec3 Normal;
+        vec2 TexCoords;
+    } fs_in;
+    
+    uniform sampler2D diffuseMap;
+    uniform sampler2D normalMap;  
+    uniform vec3 lightPos;
+    uniform vec3 viewPos;
+    uniform bool normalMapping;
+    
+    void main()
+    {           
+        vec3 normal = normalize(fs_in.Normal);
+        if(normalMapping)
+        {
+            // Obtain normal from normal map in range [0,1]
+            normal = texture(normalMap, fs_in.TexCoords).rgb;
+            // Transform normal vector to range [-1,1]
+            normal = normalize(normal * 2.0 - 1.0);   
+        }
+         // Get diffuse color
+        vec3 color = texture(diffuseMap, fs_in.TexCoords).rgb;
+        // Ambient
+        vec3 ambient = 0.2 * color;
+        // Diffuse
+        vec3 lightDir = normalize(lightPos - fs_in.FragPos);
+        float diff = max(dot(lightDir, normal), 0.0);
+        vec3 diffuse = diff * color;
+        // Specular
+        vec3 viewDir = normalize(viewPos - fs_in.FragPos);
+        vec3 reflectDir = reflect(-lightDir, normal);
+        vec3 halfwayDir = normalize(lightDir + viewDir);  
+        float spec = pow(max(dot(normal, halfwayDir), 0.0), 32.0);
+        vec3 specular = vec3(0.2) * spec;
+        
+        FragColor = vec4(ambient + diffuse + specular, 1.0f);
+    }
+    """
 
     SpriteShaderData = ShaderProgramData("")
 
     SpriteShaderData.compile_fragment_shader('sprite', shader_code=sprite_fshader)
     SpriteShaderData.compile_vertex_shader('sprite', shader_code=sprite_vshader)
     SpriteShaderData.compile_vertex_shader('anim_sprite', shader_code=anim_sprite_vshader)
+    SpriteShaderData.compile_vertex_shader('normalmap', shader_code=normalmap_vshader)
+    SpriteShaderData.compile_fragment_shader('normalmap', shader_code=normalmap_fshader)
 
     SpriteShaderData.link('sprite_shader', fragment='sprite', vertex='sprite')
     SpriteShaderData.link('anim_sprite_shader', fragment='sprite', vertex='anim_sprite')
+    SpriteShaderData.link('normalmap_shader', fragment='normalmap', vertex='normalmap')
 
     sprite_program = SpriteShaderData.build('sprite_shader')
     anim_sprite_program = SpriteShaderData.build('anim_sprite_shader')
+    nmap_sprite_program = SpriteShaderData.build('normalmap_shader')
     
     # endregion
 
@@ -195,6 +292,7 @@ def init():
 
     sprite_array = VertexArray(SpriteVertexData, 'sprite', sprite_program)
     anim_sprite_array = VertexArray(AnimatedVertexData, 'anim_sprite', anim_sprite_program)
+    nmap_sprite_array = VertexArray(normalmap_vertexdata, 'nmap_sprite', nmap_sprite_program)
 
     # endregion
 
@@ -238,6 +336,27 @@ def init():
             shader.load4f('lefttoprightbottom', l, t, r, b)
             shader.load4f('color', *color)
             shader.load_sampler2d('tex', subimagedescriptor.tex_descriptor.id, 0)
+        window.blend_mode = current
+
+    def sprite_nmap(window, view, projection, diffuse, normalmap, position, rotation, scale, origin, view_pos, light_pos, blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, TexDescriptor, Texdescriptor, Vec2, float, Vec2, Vec2, Vec2, Vec2, BlendMode) -> None
+        model = FrozenMat4.transform(
+            Vec4(position, 0., 1.),
+            rotation,
+            Vec4(scale * diffuse.size, 0., 1.)
+        )
+        current = window.blend_mode
+        window.blend_mode = blend
+        with nmap_sprite_array.render(GL_TRIANGLES) as shader:  # type: ShaderProgram
+            shader.load2f('origin', *origin)
+            shader.load_matrix4f('model', 1, False, model)
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load3f('lightPos', *Vec3(light_pos, .3))
+            shader.load3f('viewPos', *Vec3(view_pos, 0.))
+            shader.load_sampler2d('diffuseMap', diffuse.id, 0)
+            shader.load_sampler2d('normalMap', normalmap.id, 1)
+            shader.load1i('normalMapping', 1)
         window.blend_mode = current
 
     # endregion
