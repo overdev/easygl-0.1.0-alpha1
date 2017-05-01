@@ -70,6 +70,12 @@ class Arithvector(Iterable, Sequence):
     def __len__(self):
         return 0
 
+    def __abs__(self):
+        return self.__class__(*abs(v) for v in self)
+
+    def __neg__(self):
+        return self.__class__(-v for v in self)
+
     def __add__(self, other):
         if isinstance(other, (int, float)):
             return self.__class__(*(v + other for v in self))

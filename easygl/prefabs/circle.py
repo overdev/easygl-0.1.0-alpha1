@@ -41,7 +41,7 @@ from easygl.display import BlendMode, GLWindow
 __all__ = [
     'MAX_PRECISION',
     'circle_line',
-    'ellipse_line'
+    'ellipse_line',
     'circle_fill',
     'ellipse_fill',
     'arc_line',
