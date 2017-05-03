@@ -90,7 +90,6 @@ class ShaderProgramData(object):
             raise ValueError("'shader_file' or 'shader_code' keyword argument expected.")
 
         self._frag_uniforms[frag_shader_name] = self._extract_uniforms(fragment_code.split('\n'))
-        # print(frag_shader_name, '--------------->', self._frag_uniforms[frag_shader_name])
 
         fragment_id = GL.glCreateShader(GL.GL_FRAGMENT_SHADER)
         GL.glShaderSource(fragment_id, fragment_code)
@@ -200,7 +199,6 @@ class ShaderProgramData(object):
 
         self._shaderprograms[program_name] = program
         self._uniforms[program_name] = uniforms
-        print(program_name, '::', uniforms)
 
     def build(self, program_name, *uniforms):
         # type: (str, ...) -> ShaderProgram
@@ -208,5 +206,4 @@ class ShaderProgramData(object):
             raise ValueError("'{}' not found.".format(program_name))
         if len(uniforms) == 0:
             uniforms = self._uniforms[program_name]
-        # print("{} -> {}".format(program_name, uniforms))
         return ShaderProgram(self._shaderprograms[program_name], *uniforms)

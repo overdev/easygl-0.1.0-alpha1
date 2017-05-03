@@ -41,8 +41,10 @@ __all__ = [
     'init',
     'line',
     'lines',
+    'lineset',
     'vline',
     'hline',
+    'bake_lines',
 ]
 
 
@@ -60,8 +62,8 @@ def lines(window, view, projection, points, closed, color_a, color_b=None, tex=N
     # type: (GLWindow, Mat4, Mat4, Union[list, tuple], bool, Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode, bool) -> None
     pass
 
-def lineset(window, view, projection, points, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
-    # type: (GLWindow, Mat4, Mat4, Union[list, tuple], Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], float, Optional[TexDescriptor], BlendMode, bool) -> None
+def lineset(window, view, projection, points, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True, count=-1):
+    # type: (GLWindow, Mat4, Mat4, Union[list, tuple], Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], float, Optional[TexDescriptor], BlendMode, bool, int) -> None
     pass
 
 
@@ -261,8 +263,9 @@ def init():
                 shader.load1i('solidcolor', 1)
         window.blend_mode = current
 
-    def lineset(window, view, projection, points, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
-        if len(points) % 2 != 0:
+    def lineset(window, view, projection, points, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True, count=-1):
+        # type: (GLWindow, Mat4, Mat4, Union[list, tuple], Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], float, Optional[TexDescriptor], BlendMode, bool, int) -> None
+        if len(points) % 2 != 0 and update is True:
             return
 
         current = window.blend_mode
@@ -281,7 +284,7 @@ def init():
             color_b = color_a
 
         window.blend_mode = blend
-        count = max(2, min(len(points), 1024))
+        count = max(2, min(len(points), 1024)) if count == -1 else count
         count -= (count % 2) if count > 2 else 0
         with line_vertex_array.render(GL_LINES, count) as shader:  # type: ShaderProgram
             shader.load_matrix4f('view', 1, False, tuple(view))
