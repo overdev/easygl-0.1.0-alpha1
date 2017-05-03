@@ -71,10 +71,10 @@ class Arithvector(Iterable, Sequence):
         return 0
 
     def __abs__(self):
-        return self.__class__(*abs(v) for v in self)
+        return self.__class__(*(abs(v) for v in self))
 
     def __neg__(self):
-        return self.__class__(-v for v in self)
+        return self.__class__(*(-v for v in self))
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
@@ -424,6 +424,12 @@ class Vec2(Arithvector):
     # endregion
 
     @staticmethod
+    def bytesize(as_double=False):
+        if as_double:
+            return struct.calcsize(DType.double_v2.format)
+        return struct.calcsize(DType.float_v2.format)
+
+    @staticmethod
     def pack_values(*values, as_double=False):
         if as_double:
             fmt = DType.double_v2.format
@@ -452,6 +458,14 @@ class Vec2(Arithvector):
         else:
             fmt = DType.float_v2.format
         struct.pack_into(fmt, buffer, offset, self.x, self.y)
+
+    @staticmethod
+    def pack_values_into(*values, buffer, offset, as_double=False):
+        if as_double:
+            fmt = DType.double_v2.format
+        else:
+            fmt = DType.float_v2.format
+        struct.pack_into(fmt, buffer, offset, *values)
 
     def unpack_from(self, buffer, offset, as_double=False):
         if as_double:
@@ -588,6 +602,12 @@ class Vec3(Arithvector):
     # endregion
 
     @staticmethod
+    def bytesize(as_double=False):
+        if as_double:
+            return struct.calcsize(DType.double_v2.format)
+        return struct.calcsize(DType.float_v2.format)
+
+    @staticmethod
     def pack_values(*values, as_double=False):
         if as_double:
             fmt = DType.double_v3.format
@@ -616,6 +636,14 @@ class Vec3(Arithvector):
         else:
             fmt = DType.float_v3.format
         struct.pack_into(fmt, buffer, offset, self.x, self.y, self.z)
+
+    @staticmethod
+    def pack_values_into(*values, buffer, offset, as_double=False):
+        if as_double:
+            fmt = DType.double_v3.format
+        else:
+            fmt = DType.float_v3.format
+        struct.pack_into(fmt, buffer, offset, *values)
 
     def unpack_from(self, buffer, offset, as_double=False):
         if as_double:
@@ -758,6 +786,12 @@ class Vec4(Arithvector):
     # endregion
 
     @staticmethod
+    def bytesize(as_double=False):
+        if as_double:
+            return struct.calcsize(DType.double_v2.format)
+        return struct.calcsize(DType.float_v2.format)
+
+    @staticmethod
     def pack_values(*values, as_double=False):
         if as_double:
             fmt = DType.double_v4.format
@@ -786,6 +820,14 @@ class Vec4(Arithvector):
         else:
             fmt = DType.float_v4.format
         struct.pack_into(fmt, buffer, offset, self.x, self.y, self.z, self.w)
+
+    @staticmethod
+    def pack_values_into(*values, buffer, offset, as_double=False):
+        if as_double:
+            fmt = DType.double_v4.format
+        else:
+            fmt = DType.float_v4.format
+        struct.pack_into(fmt, buffer, offset, *values)
 
     def unpack_from(self, buffer, offset, as_double=False):
         if as_double:

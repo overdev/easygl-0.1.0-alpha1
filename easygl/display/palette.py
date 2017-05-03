@@ -27,11 +27,24 @@
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-from easygl.structures import FrozenVec4
+from typing import Union
+from easygl.structures import FrozenVec4, Vec4
 
 __all__ = [
 
 ]
+
+
+def mix(a, b, r):
+    # type: (Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4]) -> FrozenVec4
+    ar, ag, ab, aa = a
+    br, bg, bb, ba = b
+    return FrozenVec4(
+        ar + (br - ar) * r,
+        ag + (bg - ag) * r,
+        ab + (bb - ab) * r,
+        aa + (ba - aa) * r
+    )
 
 def from_hexcolor(hexstr):
     # type: (str) -> FrozenVec4

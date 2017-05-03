@@ -33,7 +33,7 @@ from typing import Optional, Callable
 from easygl.arrays import VertexArrayData, DType, attribute, vertex, vertex_copy, VertexArray
 from easygl.shaders import ShaderProgramData, ShaderProgram
 from easygl.textures import TexDescriptor, TextureData, MipMap, Wrap, Filter
-from easygl.structures import FrozenMat4, Vec2, Vec4
+from easygl.structures import FrozenMat4, Vec2, Vec4, FrozenVec4
 from easygl.display import BlendMode, GLWindow, Projection
 
 
@@ -68,6 +68,9 @@ def hline(window, view, projection, start, length, color_a, color_b, tex=None, v
 
 
 def bezier(window, view, projection, points, ctrl_points, tex=None, vcoord=0, blend=BlendMode.alpha):
+    pass
+
+def bake_lines(points):
     pass
 
 # endregion
@@ -123,7 +126,7 @@ def init():
     void main() {
     
         gl_Position = projection * view * vec4(position, 1.f, 1.f);
-        color = mix(start_color, end_color, gl_VertexID / point_count);
+        color = mix(start_color, end_color, gl_VertexID / (point_count - 1));
         coord = vec2(mod(gl_VertexID, 2.f), vcoord);
 
     }
@@ -163,6 +166,22 @@ def init():
 
     # endregion
 
+    # region - - -- ----==<[ HELPER FUNCTIONS ]>==---- -- - -
+
+    def bake_lines(points, buffer=None):
+        # type: (Union[list, tuple], bytearray) -> None
+        verts = len(points)
+        if verts > 1024:
+            raise ValueError("Line is too long (more then 1024 vertices).")
+
+        stride = Vec2.bytesize()
+        data = bytearray(stride * verts) if buffer is None else buffer
+        for i, vertex in enumerate(points):
+            offset = i * stride
+            Vec2.pack_into()
+
+    # endregion
+
     # region - - -- ----==<[ RENDER FUNCTIONS ]>==---- -- - -
 
     def line(window, view, projection, point_a, point_b, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
@@ -171,7 +190,7 @@ def init():
             data = Vec2(point_a).pack() + Vec2(point_b).pack()   # type: bytes
             line_vertex_array.update_data(0, data)
 
-        if not isinstance(color_b , Vec4):
+        if not isinstance(color_b , (Vec4, FrozenVec4)):
             color_b = color_a
 
         window.blend_mode = blend
