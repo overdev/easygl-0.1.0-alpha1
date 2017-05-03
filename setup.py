@@ -13,7 +13,7 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Programmin Language :: Python :: 3.4',
     ],
-    install_requires=['pygame', 'PyOpenGL', 'typing'],
+    setup_requires=['pygame', 'PyOpenGL', 'typing'],
     keywords='games easygl opengl gl graphics textures geometry rendering gamedev pygame PyOpenGL',
     author='Jorge A. G.',
     author_email='jorgegomes83@hotmail.com',

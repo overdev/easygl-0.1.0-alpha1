@@ -52,25 +52,35 @@ _initialized = False
 # region - - -- ----==<[ STUBS ]>==---- -- - -
 
 def line(window, view, projection, point_a, point_b, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
+    # type: (GLWindow, Mat4, Mat4, Vec2, Vec2, Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode, bool) -> None
     pass
 
 
 def lines(window, view, projection, points, closed, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Union[list, tuple], bool, Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode, bool) -> None
+    pass
+
+def lineset(window, view, projection, points, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
+    # type: (GLWindow, Mat4, Mat4, Union[list, tuple], Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], float, Optional[TexDescriptor], BlendMode, bool) -> None
     pass
 
 
 def vline(window, view, projection, start, length, color_a, color_b, tex=None, vcoord=0, blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Vec2, float, Union[Vec2, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode) -> None
     pass
 
 
 def hline(window, view, projection, start, length, color_a, color_b, tex=None, vcoord=0, blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Vec2, float, Union[Vec2, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode) -> None
     pass
 
 
 def bezier(window, view, projection, points, ctrl_points, tex=None, vcoord=0, blend=BlendMode.alpha):
+    # type: (GLWindow, Mat4, Mat4, Union[list, tuple], Union[list, tuple], Optional[TexDescriptor], float, BlendMode) -> None
     pass
 
-def bake_lines(points):
+def bake_lines(points, buffer=None):
+    # type: (Union[list, tuple], bytearray) -> None
     pass
 
 # endregion
@@ -78,7 +88,7 @@ def bake_lines(points):
 
 def init():
     # type: () -> None
-    global _initialized, line, lines, vline, hline, bezier
+    global _initialized, line, lines, vline, hline, bezier, bake_lines, lineset
 
     if _initialized:
         return
@@ -176,15 +186,18 @@ def init():
 
         stride = Vec2.bytesize()
         data = bytearray(stride * verts) if buffer is None else buffer
-        for i, vertex in enumerate(points):
+        for i, (x, y) in enumerate(points):
             offset = i * stride
-            Vec2.pack_into()
+            Vec2.pack_values_into(x, y, buffer=data, offset=offset)
+
+        line_vertex_array.update_data(0, data)
 
     # endregion
 
     # region - - -- ----==<[ RENDER FUNCTIONS ]>==---- -- - -
 
     def line(window, view, projection, point_a, point_b, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
+        # type: (GLWindow, Mat4, Mat4, Vec2, Vec2, Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode, bool) -> None
         current = window.blend_mode
         if update:
             data = Vec2(point_a).pack() + Vec2(point_b).pack()   # type: bytes
@@ -210,6 +223,7 @@ def init():
         window.blend_mode = current
 
     def lines(window, view, projection, points, closed, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
+        # type: (GLWindow, Mat4, Mat4, Union[list, tuple], bool, Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode, bool) -> None
         if len(points) < 2 and not closed:
             return
         if len(points) < 3 and closed:
@@ -247,13 +261,54 @@ def init():
                 shader.load1i('solidcolor', 1)
         window.blend_mode = current
 
+    def lineset(window, view, projection, points, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
+        if len(points) % 2 != 0:
+            return
+
+        current = window.blend_mode
+        if update:
+            data = Vec2(points[0]).pack()    # type: bytes
+            if window.projection is Projection.ortho_down:
+                h = window.height
+                for (x, y) in points[1:]:
+                    data += Vec2.pack_values(x, h - y)
+            else:
+                for (x, y) in points[1:]:
+                    data += Vec2.pack_values(x, y)
+            line_vertex_array.update_data(0, data)
+
+        if not isinstance(color_b , Vec4):
+            color_b = color_a
+
+        window.blend_mode = blend
+        count = max(2, min(len(points), 1024))
+        count -= (count % 2) if count > 2 else 0
+        with line_vertex_array.render(GL_LINES, count) as shader:  # type: ShaderProgram
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load4f('start_color', *color_a)
+            shader.load4f('end_color', *color_b)
+            shader.load1f('point_count', count)
+            shader.load1f('vcoord', vcoord)
+            if isinstance(tex, TexDescriptor):
+                shader.load_sampler2d('tex', tex.id, 0)
+                shader.load1i('solidcolor', 0)
+            else:
+                shader.load_sampler2d('tex', texdata['line_tex'].id, 0)
+                shader.load1i('solidcolor', 1)
+        window.blend_mode = current
+
+
     def vline(window, view, projection, start, length, color_a, color_b, tex=None, vcoord=0, blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, Union[Vec2, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode) -> None
         line(window, view, projection, start, Vec2(start) + (0, length), color_a, color_b, tex, vcoord, blend)
 
     def hline(window, view, projection, start, length, color_a, color_b, tex=None, vcoord=0, blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Vec2, float, Union[Vec2, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode) -> None
         line(window, view, projection, start, Vec2(start) + (length, 0), color_a, color_b, tex, vcoord, blend)
 
     def bezier(window, view, projection, points, ctrl_points, tex=None, vcoord=0, blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, Union[list, tuple], Union[list, tuple], Optional[TexDescriptor], float, BlendMode) -> None
         pass
 
 
