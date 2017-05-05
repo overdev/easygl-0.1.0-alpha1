@@ -27,7 +27,7 @@
 #
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-from easygl.structures.vectors import Vec3, Vec4
+from easygl.structures.vectors import Vec3, Vec2, Vec4
 import pygame as pg
 import random
 from collections import namedtuple as nt
@@ -81,11 +81,11 @@ def any_rgb():
 
 
 def ndc(x, y):
-    # type: (float, float) -> tuple
+    # type: (float, float) -> Vec2
     w, h = pg.display.get_surface().get_size()
     ox = w * 0.5
     oy = h * 0.5
-    return ox + (ox * x), oy + (oy * y)
+    return Vec2(ox + (ox * x), oy + (oy * y))
 
 
 Color = nt("Color", "none black red yellow green cyan blue magenta white")(

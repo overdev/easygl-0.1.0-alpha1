@@ -77,6 +77,7 @@ class Arithvector(Iterable, Sequence):
         return self.__class__(*(-v for v in self))
 
     def __add__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(v + other for v in self))
         else:
@@ -89,6 +90,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __radd__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(other + v for v in self))
         else:
@@ -101,6 +103,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __iadd__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             for i in range(len(self)):
                 self[i] += other
@@ -117,6 +120,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __sub__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(v - other for v in self))
         else:
@@ -129,6 +133,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __rsub__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(other - v for v in self))
         else:
@@ -141,6 +146,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __isub__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             for i in range(len(self)):
                 self[i] -= other
@@ -157,6 +163,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __mul__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(v * other for v in self))
         else:
@@ -169,6 +176,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __rmul__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(other * v for v in self))
         else:
@@ -181,6 +189,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __imul__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             for i in range(len(self)):
                 self[i] *= other
@@ -197,6 +206,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __truediv__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(v / other for v in self))
         else:
@@ -209,6 +219,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __rtruediv__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(other / v for v in self))
         else:
@@ -221,6 +232,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __itruediv__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             for i in range(len(self)):
                 self[i] /= other
@@ -237,6 +249,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __mod__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(v % other for v in self))
         else:
@@ -249,6 +262,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __rmod__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             return self.__class__(*(other % v for v in self))
         else:
@@ -261,6 +275,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __imod__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> Arithvector
         if isinstance(other, (int, float)):
             for i in range(len(self)):
                 self[i] %= other
@@ -277,6 +292,7 @@ class Arithvector(Iterable, Sequence):
                 return NotImplemented
 
     def __eq__(self, other):
+        # type: (Union[int, float, list, tuple, Arithvector]) -> bool
         try:
             n = len(self)
             return all(self[i] == other[i] for i in range(n)) and len(other) == n

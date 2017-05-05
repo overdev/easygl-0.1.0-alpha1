@@ -45,13 +45,23 @@ __all__ = [
     'vline',
     'hline',
     'bake_lines',
+    'line_batch',
+    'line_vertex_data',
+    'line_shader',
+    'line_shader_data',
 ]
 
 
 _initialized = False
-
+line_shader = None
+line_shader_data = None
+line_vertex_data = None
 
 # region - - -- ----==<[ STUBS ]>==---- -- - -
+
+def line_batch(window, view, projection, vert_array, count, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode):
+    # type: (GLWindow, Mat4, Mat4, VertexArray, int, Union[Vec4, FrozenVec4], Optional[Union[Vec4, FrozenVec4]], Optional[TexDescription], float, BlendMode) -> None
+    pass
 
 def line(window, view, projection, point_a, point_b, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
     # type: (GLWindow, Mat4, Mat4, Vec2, Vec2, Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode, bool) -> None
@@ -90,7 +100,8 @@ def bake_lines(points, buffer=None):
 
 def init():
     # type: () -> None
-    global _initialized, line, lines, vline, hline, bezier, bake_lines, lineset
+    global _initialized, line, lines, vline, hline, bezier, bake_lines, lineset, line_vertex_data, line_shader_data,\
+           line_shader, line_batch
 
     if _initialized:
         return
@@ -197,6 +208,25 @@ def init():
     # endregion
 
     # region - - -- ----==<[ RENDER FUNCTIONS ]>==---- -- - -
+
+    def line_batch(window, view, projection, vert_array, count, color_a, color_b = None, tex=None, vcoord=0, blend=BlendMode.alpha):
+        # type: (GLWindow, Mat4, Mat4, VertexArray, int, Union[Vec4, FrozenVec4], Optional[Union[Vec4, FrozenVec4]], Optional[TexDescription], float, BlendMode) -> None
+        current = window.blend_mode
+        window.blend_mode = blend
+        with vert_array.render(GL_LINES, count) as shader:  # type: ShaderProgram
+            shader.load_matrix4f('view', 1, False, tuple(view))
+            shader.load_matrix4f('projection', 1, False, tuple(projection))
+            shader.load4f('start_color', *color_a)
+            shader.load4f('end_color', *color_b)
+            shader.load1f('point_count', count)
+            shader.load1f('vcoord', vcoord)
+            if isinstance(tex, TexDescriptor):
+                shader.load_sampler2d('tex', tex.id, 0)
+                shader.load1i('solidcolor', 0)
+            else:
+                shader.load_sampler2d('tex', texdata['line_tex'].id, 0)
+                shader.load1i('solidcolor', 1)
+        window.blend_mode = current
 
     def line(window, view, projection, point_a, point_b, color_a, color_b=None, tex=None, vcoord=0, blend=BlendMode.alpha, update=True):
         # type: (GLWindow, Mat4, Mat4, Vec2, Vec2, Union[Vec4, FrozenVec4], Union[Vec4, FrozenVec4], Optional[TexDescriptor], float, BlendMode, bool) -> None
