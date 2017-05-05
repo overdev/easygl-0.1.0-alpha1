@@ -915,3 +915,64 @@ class FrozenVec4(nt('FrozenVec4', 'x y z w'), Arithvector):
         return FrozenVec4(0., 0., 0., 1.)
 
     # endregion
+
+
+class FrozenVec3(nt('FrozenVec3', 'x y z'), Arithvector):
+
+    def __getattr__(self, name):
+        if name[0] in 'xyz':
+            swz = 'xyz'
+        elif name[0] in 'rgb':
+            swz = 'rgb'
+        else:
+            raise AttributeError("FrozenVec3 has no '{}' attribute.".format(name))
+
+        if len(name) == 1:
+            attr = {'x': 'x', 'y': 'y', 'z': 'z', 'r': 'x', 'g': 'y', 'b': 'z'}
+            return getattr(self, attr[name])
+        elif len(name) not in (2, 3, 4):
+            raise AttributeError("Attribute swizzling is too long ({}).".format(len(name)))
+        else:
+            v = {2: Vec2, 3: FrozenVec3, 4: FrozenVec4}[len(name)]
+
+        i = [self.x, self.y, self.z]
+        try:
+            return v(*(i[swz.index(ch)] for ch in name))
+        except ValueError:
+            raise AttributeError("FrozenVec3 '{}' swizzled with invalid attribute(s).".format(name))
+
+    # region - - -- ----==<[ OTHER ]>==---- -- - -
+
+    def hypot(self):
+        # type: () -> None
+        return self.x ** 2 + self.y ** 2 + self.z ** 2
+
+    def dot(self, other):
+        # type: (Union[Vec3, FrozenVec3, Vec4, FrozenVec4]) -> float
+        return ((self.x * other.x) +
+                (self.y * other.y) +
+                (self.z * other.z))
+
+    def cross(self, other):
+        # type: (Union[Vec3, FrozenVec3, Vec4, FrozenVec4]) -> Vec4
+        return  FrozenVec4(self.x * other.z - self.z * other.y,
+                     self.y * other.x - self.x * other.z,
+                     self.z * other.y - self.y * other.x,
+                     1.)
+
+    def length(self):
+        # type: () -> float
+        return math.sqrt(self.hypot())
+
+    def normalized(self):
+        # type: () -> FrozenVec3
+        magnitude = self.length()
+        if magnitude != 0.:
+            return FrozenVec3(
+                self.x / magnitude,
+                self.y / magnitude,
+                self.z / magnitude,
+            )
+        return FrozenVec3(0., 0., 0.)
+
+    # endregion
