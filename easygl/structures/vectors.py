@@ -315,14 +315,14 @@ class Vec2(Arithvector):
         return cls(1., 1.)
 
     @classmethod
-    def horz(cls):
-        # type: () -> Vec2
-        return cls(1., 0.)
+    def horz(cls, x):
+        # type: (float) -> Vec2
+        return cls(x, 0.)
 
     @classmethod
-    def vert(cls):
-        # type: () -> Vec2
-        return cls(0., 1.)
+    def vert(cls, y):
+        # type: (float) -> Vec2
+        return cls(0., y)
 
     # region - - -- ----==<[ COMMON ]>==---- -- - -
 
@@ -974,5 +974,61 @@ class FrozenVec3(nt('FrozenVec3', 'x y z'), Arithvector):
                 self.z / magnitude,
             )
         return FrozenVec3(0., 0., 0.)
+
+    # endregion
+
+
+class FrozenVec2(nt('FrozenVec2', 'x y z'), Arithvector):
+
+    def __getattr__(self, name):
+        if name[0] in 'xy':
+            swz = 'xy'
+        elif name[0] in 'uv':
+            swz = 'uv'
+        else:
+            raise AttributeError("FrozenVec2 has no '{}' attribute.".format(name))
+
+        if len(name) == 1:
+            attr = {'x': 'x', 'y': 'y', 'u': 'x', 'v': 'y'}
+            return getattr(self, attr[name])
+        elif len(name) not in (2, 3, 4):
+            raise AttributeError("Attribute swizzling is too long ({}).".format(len(name)))
+        else:
+            v = {2: FrozenVec2, 3: FrozenVec3, 4: FrozenVec4}[len(name)]
+
+        i = [self.x, self.y]
+        try:
+            return v(*(i[swz.index(ch)] for ch in name))
+        except ValueError:
+            raise AttributeError("FrozenVec2 '{}' swizzled with invalid attribute(s).".format(name))
+
+    # region - - -- ----==<[ OTHER ]>==---- -- - -
+
+    def hypot(self):
+        # type: () -> float
+        return self.x ** 2 + self.y ** 2
+
+    def dot(self, other):
+        # type: (Vec2) -> float
+        return ((self.x * other.x) +
+                (self.y * other.y))
+
+    def cross(self, other):
+        # type: (Vec2) -> float
+        return self.x * other.y - self.y * other.x
+
+    def length(self):
+        # type: () -> float
+        return math.sqrt(self.hypot())
+
+    def normalized(self):
+        # type: () -> FrozenVec2
+        magnitude = self.length()
+        if magnitude != 0.:
+            return FrozenVec2(
+                self.x / magnitude,
+                self.y / magnitude,
+            )
+        return FrozenVec2(0., 0.)
 
     # endregion
